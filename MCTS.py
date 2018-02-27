@@ -13,6 +13,7 @@ class Grid:
     """
     def __init__(self,n = 100,Map = None,agents=[]):
         self.size = (n,n)
+        self.size1 = n
         self.Map = np.zeros(self.size)
         self.agent_map = np.zeros(self.size)
         self.agents = agents
@@ -25,7 +26,7 @@ class Grid:
             try:
                 self.agents.append(agent(self,location=location))
             except Exception as e:
-                print('Error: %s'%e)
+                print('Error, loc 1: %s'%e)
 
     def remove_agent(self,index=None):
         if index == None:
@@ -36,7 +37,7 @@ class Grid:
                 self.agents.pop(index)
             except Exception as e:
 
-                print('Error: %s' %e)
+                print('Error, loc 2: %s' %e)
 
     def time_step(self,style = 'random'):
         if style == 'random':
@@ -70,11 +71,8 @@ class Grid:
         if np.sum(s) == 0:
             R = 100 + np.sum(r)
         else:
-            R = np.sum(1 / (s + 1) + r)
+            R = np.sum(1 / (100*s + 1) + r)
         return R
-
-
-
 
 
 class agent:
@@ -97,7 +95,7 @@ class agent:
         self.last_action = None
 
 
-    def simulate_step(self,action,loc = None, probability = .1):
+    def simulate_step(self,action,loc = None, probability = 1):
         if loc ==None:
             loc = np.array(self.location)
         mistake = float(np.random.rand())>probability
@@ -112,13 +110,22 @@ class agent:
                 loc[1] = loc[1]-1
             if action == 4:
                 pass
+            if loc[0]<=0:
+                loc[0]=0
+            if loc[1]<=0:
+                loc[1]=0
+            if loc[0]>self.grid.size1-1:
+                loc[0]=self.grid.size1-1
+            if loc[1]>self.grid.size1-1:
+                loc[1]=self.grid.size1-1
+
             return loc
         if mistake:
             #Change later
             action = np.random.sample([0,1,2,3,4])
             loc = self.simulate_step(action)
             return loc
-        
+
     def get_reward(self,action=None):
         if action == None:
             action = agent.last_action
@@ -152,17 +159,16 @@ class agent:
 
 if __name__ == '__main__':
     grid = Grid(n=5)
-    grid.add_agent()
-    grid.add_agent()
-    grid.add_agent()
-    grid.add_agent()
-    grid.add_agent()
-    for agent in grid.agents:
-        print(agent.location)
-    print('-----------')
-    grid.show_grid()
-    grid.time_step()
-    grid.show_grid()
+    grid.add_agent(location=(3, 3))
+    grid.add_agent(location=(3, 4))
+    while True:
+        for agent in grid.agents:
+            print(agent.location)
+            print(agent.last_action)
+        print('-----------')
+        grid.time_step()
+        print('blah')
+        grid.show_grid()
     for agent in grid.agents:
         print(agent.location)
     print(grid.get_reward())
