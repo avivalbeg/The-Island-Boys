@@ -39,10 +39,37 @@ class Grid:
 
                 print('Error, loc 2: %s' %e)
 
-    def time_step(self,style = 'random'):
-        if style == 'random':
+    def time_step(self,actions = '33'):
+        """
+
+        :param actions: a size num_Agents numpy array each with the action for each agent to take
+        :return: returns the total reward for the action taken
+        """
+        if actions == 'random':
             for agent in self.agents:
                 action = np.random.choice(np.arange(agent.nA))
+                agent.take_step(action)
+        else:
+            for i,agent in enumerate(self.agents):
+                action = actions[i]
+                agent.take_step(action)
+        reward = self.get_reward()
+        return reward
+
+    def Simulate_time_step(self, actions='random'):
+        """
+
+        :param actions: a size num_Agents numpy array each with the action for each agent to take
+        :return: returns the total reward for the action taken
+        """
+        print(actions)
+        if actions == 'random':
+            for agent in self.agents:
+                action = np.random.choice(np.arange(agent.nA))
+                agent.take_step(action)
+        else:
+            for i, agent in enumerate(self.agents):
+                action = np.argmax(int(actions[i]))
                 agent.take_step(action)
         reward = self.get_reward()
         return reward
@@ -73,6 +100,10 @@ class Grid:
         else:
             R = np.sum(1 / (100*s + 1) + r)
         return R
+
+
+
+
 
 
 class agent:
@@ -140,6 +171,26 @@ class agent:
 
 
 
+
+
+class Learning:
+    def __init__(self,env):
+        self.env = env
+        self.nA = self.env.nA
+
+    def MCTS(self,env,depth=2):
+        N_0 = {}
+        Q_0 = {}
+        for layer in depth:
+            for action in range(self.nA):
+                return None
+
+
+
+
+
+
+
 # class MCTS:
 #     def __init__(self,env,N0 = None,N0= None,Q0 = None):
 #         self.Tree = []
@@ -166,7 +217,7 @@ if __name__ == '__main__':
             print(agent.location)
             print(agent.last_action)
         print('-----------')
-        grid.time_step()
+        grid.time_step(actions=[3,3])
         print('blah')
         grid.show_grid()
     for agent in grid.agents:
