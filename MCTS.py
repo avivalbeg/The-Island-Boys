@@ -39,10 +39,10 @@ class Grid:
 
                 print('Error, loc 2: %s' %e)
 
-    def time_step(self,actions = '33'):
+    def time_step(self,actions = 'random'):
         """
 
-        :param actions: a size num_Agents numpy array each with the action for each agent to take
+        :param actions: a size num_Agents numpy array(or string with no spaces) each with the action for each agent to take.
         :return: returns the total reward for the action taken
         """
         if actions == 'random':
@@ -51,10 +51,11 @@ class Grid:
                 agent.take_step(action)
         else:
             for i,agent in enumerate(self.agents):
-                action = actions[i]
+                action = int(actions[i])
                 agent.take_step(action)
         reward = self.get_reward()
-        return reward
+        # print(reward)
+        return reward,done
 
     def Simulate_time_step(self, actions='random'):
         """
@@ -90,16 +91,18 @@ class Grid:
         R = 0   #The closer the agents the higher the reward
         locations = []
         r = []
+        done = False
         for agent in self.agents:
             locations.append(np.array(agent.location))
             r.append(agent.get_reward())
         s = np.sum(distance(locations,locations),axis=1)
         r = np.array(r)
         if np.sum(s) == 0:
+            done = True
             R = 100 + np.sum(r)
         else:
             R = np.sum(1 / (100*s + 1) + r)
-        return R
+        return R,done
 
 
 
@@ -212,13 +215,16 @@ if __name__ == '__main__':
     grid = Grid(n=5)
     grid.add_agent(location=(3, 3))
     grid.add_agent(location=(3, 4))
-    while True:
+    done = False
+    while not done:
         for agent in grid.agents:
             print(agent.location)
             print(agent.last_action)
         print('-----------')
-        grid.time_step(actions=[3,3])
-        print('blah')
+        actions = input('actions:')
+        R,_ = grid.time_step(actions=actions)
+        Reward = R[0]
+        done = R[1]
         grid.show_grid()
     for agent in grid.agents:
         print(agent.location)
