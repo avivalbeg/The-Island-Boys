@@ -22,12 +22,32 @@ class agent:
         self.last_action = None
         self.meeting_point = None
         self.waiting = False
-        self.viewing = 3
+        self.viewing = 2
+        self.view = np.zeros(grid.Map.shape,dtype=bool)
 
     def convert_location_to_state(self):
         n = self.grid.size1
         s = (n-1)*self.location[0]+self.location[1]
         return s
+
+    def communicate(self,message = 'm'):
+        """
+
+        :param message:'m' - change meeting point to ...
+        Then wait for confirmation or a different opinion if the meeting point doesn't make sense to the second robot
+        'a' - accept meeting point
+        :return:
+        """
+        total_view = self.view
+        for agent in self.grid.agents:
+            total_view += agent.view
+        for agent in self.grid.agents:
+            agent.view = total_view
+        if message == 'm':
+            for agent in self.grid.agents:
+                #agent.message = self.grid.get_new_meeting()
+                pass
+
 
     def see_map(self):
         Map = self.grid.Map
@@ -49,22 +69,8 @@ class agent:
             ymax = maxY
         else:
             ymax = y+self.viewing
-        view = Map[xlow:xmax,ylow:ymax]
-        return view
+        self.view[xlow:xmax,ylow:ymax] = True
 
-     # def communicate(self):
-     #    agents = self.grid.agents
-     #    locations = []
-     #    if self.waiting:
-     #        for agent in agents:
-     #            locations.append(agent.location)
-     #        self.meeting_point =
-     #        return
-     #    agents = self.grid.agents
-     #    for agent in agents:
-     #
-     #        agent.waiting = True
-    #
 
     def simulate_step(self,action,loc = None, probability = 1):
         if loc ==None:

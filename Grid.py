@@ -105,9 +105,31 @@ class Grid:
         return R,done
 
 if __name__ =='__main__':
-    grid = Grid()
-    agent1 = agent(grid)
-    plt.imshow(agent1.see_map())
-    plt.show()
-    plt.imshow(grid.agent_map)
-    plt.show()
+    grid = Grid(10)
+    grid.add_agent()
+    grid.add_agent(location=(2,3))
+    agent1 = grid.agents[0]
+    agent2 = grid.agents[1]
+    done = False
+    i= 1
+    while not done:
+        if i%3==0:
+            agent1.communicate()
+            print('communicated')
+        for agent in grid.agents:
+            print(agent.location)
+            print(agent.last_action)
+        print('-----------')
+        actions = input('actions:')
+        R,done = grid.time_step(actions=actions)
+        agent1.see_map()
+        plt.imshow(agent1.view)
+        plt.title('agent 1 view')
+        plt.show()
+        agent2.see_map()
+        plt.imshow(agent2.view)
+        plt.title('agent 2 view')
+        plt.show()
+        i+=1
+    # plt.imshow(grid.agent_map)
+    # plt.show()

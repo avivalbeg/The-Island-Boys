@@ -3,8 +3,6 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 def perlin(x,y,seed=0):
     # permutation table
     np.random.seed(seed)
@@ -75,9 +73,6 @@ def Lloyds(n=200):
         V = Voronoi(points)
     voronoi_plot_2d(Voronoi(points))
     plt.show()
-
-
-
 
 if __name__ =='__main__':
     lin = np.linspace(0,5,200,endpoint=False)
