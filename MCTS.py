@@ -128,6 +128,11 @@ class agent:
         self.grid = grid
         self.last_action = None
 
+    def convert_location_to_state(self):
+        n = self.grid.size1
+        s = (n-1)*self.location[0]+self.location[1]
+        return s
+
 
     def simulate_step(self,action,loc = None, probability = 1):
         if loc ==None:
@@ -186,7 +191,7 @@ class Learning:
         Q_0 = {}
         for layer in depth:
             for action in range(self.nA):
-                return None
+                return
 
 
 
@@ -194,21 +199,39 @@ class Learning:
 
 
 
-# class MCTS:
-#     def __init__(self,env,N0 = None,N0= None,Q0 = None):
-#         self.Tree = []
-#         if Q0 == None:
-#             self.Q0 = np.zeros(env.nS, env.nA)
-#         if N0 == None:
-#             self.N0 = np.zeros(env.nS,env.nA)
-#
-#         if N0 != None:
-#             self.N0 = N0
-#         if Q0 != None:
-#             self.Q0 = Q0
-#
-#     def select_action(self,s,d):
-#         return None
+class MCTS:
+    def __init__(self,env,N0 = None,Q0 = None,T = None):
+        self.Tree = []
+        if Q0 == None:
+            self.Q = np.zeros(env.nS, env.nA)
+            self.Q0 = np.zeros(env.nS, env.nA)
+        if N0 == None:
+            self.N = np.zeros(env.nS,env.nA)
+            self.N0 = np.zeros(env.nS, env.nA)
+        if T == None:
+            self.T = []
+
+        if N0 != None:
+            self.N = N0
+            self.N0 = np.zeros(env.nS, env.nA)
+        if Q0 != None:
+            self.Q = Q0
+            self.Q0 = np.zeros(env.nS, env.nA)
+        if T != None:
+            self.T = T
+
+    def select_action(self,s,d,num_episodes = 100):
+        self.T = []
+        for _ in range(num_episodes):
+            self.simulate(s,d)   #the initial policy is considered to be unknown
+        return np.argmax(self.Q,axis=1) #Returns the action for each of the agents
+
+    def simulate(self,s,d):
+        if d == 0:
+            return 0
+        if s not in self.T: #checking if the state has already been visited
+            for a in range(self.nA):
+                self.N[s]
 
 
 if __name__ == '__main__':
@@ -227,7 +250,7 @@ if __name__ == '__main__':
         done = R[1]
         grid.show_grid()
     for agent in grid.agents:
-        print(agent.location)
+        print(agent.convert_location_to_state())
     print(grid.get_reward())
     print(grid.agents)
 
