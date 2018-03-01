@@ -104,3 +104,10 @@ class Grid:
             R = np.sum(1 / (100*s + 1) + r)
         return R,done
 
+if __name__ =='__main__':
+    grid = Grid()
+    agent1 = agent(grid)
+    plt.imshow(agent1.see_map())
+    plt.show()
+    plt.imshow(grid.agent_map)
+    plt.show()

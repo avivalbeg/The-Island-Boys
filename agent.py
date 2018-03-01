@@ -1,5 +1,6 @@
 import numpy as np
-
+#from Grid import Grid
+import matplotlib.pyplot as plt
 
 class agent:
     """
@@ -19,12 +20,51 @@ class agent:
         self.R = 0
         self.grid = grid
         self.last_action = None
+        self.meeting_point = None
+        self.waiting = False
+        self.viewing = 3
 
     def convert_location_to_state(self):
         n = self.grid.size1
         s = (n-1)*self.location[0]+self.location[1]
         return s
 
+    def see_map(self):
+        Map = self.grid.Map
+        maxX,maxY = Map.shape
+        x,y = self.location
+        if x-self.viewing<0:
+            xlow = 0
+        else:
+            xlow = x-self.viewing
+        if y-self.viewing<0:
+            ylow = 0
+        else:
+            ylow = y-self.viewing
+        if x+self.viewing>maxX:
+            xmax = maxX
+        else:
+            xmax = x+self.viewing
+        if y+self.viewing>maxY:
+            ymax = maxY
+        else:
+            ymax = y+self.viewing
+        view = Map[xlow:xmax,ylow:ymax]
+        return view
+
+     # def communicate(self):
+     #    agents = self.grid.agents
+     #    locations = []
+     #    if self.waiting:
+     #        for agent in agents:
+     #            locations.append(agent.location)
+     #        self.meeting_point =
+     #        return
+     #    agents = self.grid.agents
+     #    for agent in agents:
+     #
+     #        agent.waiting = True
+    #
 
     def simulate_step(self,action,loc = None, probability = 1):
         if loc ==None:
@@ -41,6 +81,10 @@ class agent:
                 loc[1] = loc[1]-1
             if action == 4:
                 pass
+            if action ==5:
+                self.communicate()
+            if action ==6:
+                self.communicate()
             if loc[0]<=0:
                 loc[0]=0
             if loc[1]<=0:
@@ -69,4 +113,8 @@ class agent:
         self.location = self.simulate_step(action)
         self.last_action = action
 
-
+# if __name__ =='__main__':
+#     grid = Grid()
+#     agent1 = agent(grid)
+#     plt.imshow(agent1.see_map())
+#     plt.show()
