@@ -1,6 +1,7 @@
 import numpy as np
 #from Grid import Grid
 import matplotlib.pyplot as plt
+from scipy.spatial import distance_matrix as distance
 
 class agent:
     """
@@ -20,7 +21,8 @@ class agent:
         self.R = 0
         self.grid = grid
         self.last_action = None
-        self.meeting_point = None
+        #self.meeting_point = None
+        self.meeting_point = self.grid.meeting_point  # Just for now before I figure out how to get the robots to agree on a meeting spot.
         self.waiting = False
         self.viewing = 2
         self.view = np.zeros(grid.Map.shape,dtype=bool)
@@ -47,7 +49,6 @@ class agent:
             for agent in self.grid.agents:
                 #agent.message = self.grid.get_new_meeting()
                 pass
-
 
     def see_map(self):
         Map = self.grid.Map
@@ -108,12 +109,25 @@ class agent:
             return loc
 
     def get_reward(self,action=None):
+        r=0
+        k=1
+        if self.meeting_point is None:
+            r+= -1
+        else:
+            r+= k/(distance([self.location],[self.meeting_point]).squeeze()+1)
         if action == None:
             action = self.last_action
-        if action == 4:
-            return -.01
+        if action ==6:
+            r-=.03
+        elif action == 5:
+            r-=.03
+        elif action == 4:
+            r+=-.01
         else:
-            return -.03
+            r+=-.03
+        if self.grid.have_met()==True:
+            r+=50
+        return r
 
     def take_step(self,action):
         self.location = self.simulate_step(action)

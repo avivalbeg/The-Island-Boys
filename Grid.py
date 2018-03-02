@@ -17,6 +17,7 @@ class Grid:
         self.Map = np.zeros(self.size)
         self.agent_map = np.zeros(self.size)
         self.agents = agents
+        #self.meeting_point = np.array([2,3])
         self.meeting_point = np.random.randint(1,self.size[0],2)
 
     def add_agent(self,location=None):
@@ -86,50 +87,76 @@ class Grid:
         plt.imshow(self.Map+self.agent_map)
         plt.show()
 
-    def get_reward(self):
-        """A function of the agents locations"""
-        R = 0   #The closer the agents the higher the reward
-        locations = []
-        r = []
-        done = False
+    def have_met(self):
+        met = False
         for agent in self.agents:
-            locations.append(np.array(agent.location))
-            r.append(agent.get_reward())
-        s = np.sum(distance(locations,locations),axis=1)
-        r = np.array(r)
-        if np.sum(s) == 0:
-            done = True
-            R = 100 + np.sum(r)
-        else:
-            R = np.sum(1 / (100*s + 1) + r)
-        return R,done
+            if np.array_equal(agent.location,agent.meeting_point):
+                pass
+            else:
+                return met
+        met = True
+        return met
+
+    def total_reward(self):
+        R = 0
+        for agent in self.agents:
+            R+=agent.get_reward()
+        return R
+
+
+    # def get_reward(self):
+    #     """A function of the agents locations"""
+    #     R = 0   #The closer the agents the higher the reward
+    #     locations = [self.]
+    #     r = []
+    #     done = False
+    #     locations.append(np.array(agent.location))
+    #         r.append(agent.get_reward())
+    #     s = np.sum(distance(locations,locations),axis=1)
+    #     r = np.array(r)
+    #     if np.sum(s) == 0:
+    #         done = True
+    #         R = 100 + np.sum(r)
+    #     else:
+    #         R = np.sum(1 / (100*s + 1) + r)
+    #     return R,done
 
 if __name__ =='__main__':
     grid = Grid(10)
-    grid.add_agent()
+    grid.add_agent(location = (2,3))
     grid.add_agent(location=(2,3))
-    agent1 = grid.agents[0]
-    agent2 = grid.agents[1]
-    done = False
-    i= 1
-    while not done:
-        if i%3==0:
-            agent1.communicate()
-            print('communicated')
-        for agent in grid.agents:
-            print(agent.location)
-            print(agent.last_action)
-        print('-----------')
-        actions = input('actions:')
-        R,done = grid.time_step(actions=actions)
-        agent1.see_map()
-        plt.imshow(agent1.view)
-        plt.title('agent 1 view')
-        plt.show()
-        agent2.see_map()
-        plt.imshow(agent2.view)
-        plt.title('agent 2 view')
-        plt.show()
-        i+=1
+    print(grid.total_reward())
+
+    #Checking the get_reward function in agent
+    #agent1 = grid.agents[0]
+    #print(agent1.get_reward())
+
+    #Checking for having met function
+    #print(grid.have_met())
+
+    ##Checking the map sharing
+    # agent1 = grid.agents[0]
+    # agent2 = grid.agents[1]
+    # done = False
+    # i= 1
+    # while not done:
+    #     if i%3==0:
+    #         agent1.communicate()
+    #         print('communicated')
+    #     for agent in grid.agents:
+    #         print(agent.location)
+    #         print(agent.last_action)
+    #     print('-----------')
+    #     actions = input('actions:')
+    #     R,done = grid.time_step(actions=actions)
+    #     agent1.see_map()
+    #     plt.imshow(agent1.view)
+    #     plt.title('agent 1 view')
+    #     plt.show()
+    #     agent2.see_map()
+    #     plt.imshow(agent2.view)
+    #     plt.title('agent 2 view')
+    #     plt.show()
+    #     i+=1
     # plt.imshow(grid.agent_map)
     # plt.show()
