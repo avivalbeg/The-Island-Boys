@@ -11,18 +11,28 @@ class Grid:
         agents: the set of agents
 
     """
-    def __init__(self,n = 100,Map = None,agents=[]):
+    def __init__(self,n = 10,Map = None,agents=[]):
         self.size = (n,n)
         self.size1 = n
-        self.Map = np.zeros(self.size)
+        if type(Map) == np.ndarray:
+            print('good')
+            if Map.shape[0]== Map.shape[1]:
+                self.Map = Map
+                self.size = np.shape(Map)
+                self.size1 = self.size[0]
+            else:
+                print('Map is not square defaulting to flat geography')
+                self.Map = np.zeros(self.size)
+        else:
+            self.Map = np.zeros(self.size)
         self.agent_map = np.zeros(self.size)
         self.agents = agents
         #self.meeting_point = np.array([2,3])
         self.meeting_point = np.random.randint(1,self.size[0],2)
 
-    def add_agent(self,location=None):
+    def add_agent(self,location=None,learner='Random'):
         if location == None:
-            self.agents.append(agent(self))
+            self.agents.append(agent(self,learner=learner))
         else:
             try:
                 self.agents.append(agent(self,location=location))
@@ -87,6 +97,10 @@ class Grid:
         plt.imshow(self.Map+self.agent_map)
         plt.show()
 
+    def get_state_grid(self):
+        self.update_state_grid()
+        return(self.agent_map)
+
     def have_met(self):
         met = False
         for agent in self.agents:
@@ -102,29 +116,37 @@ class Grid:
         for agent in self.agents:
             R+=agent.get_reward()
         return R
-
-
-    # def get_reward(self):
-    #     """A function of the agents locations"""
-    #     R = 0   #The closer the agents the higher the reward
-    #     locations = [self.]
-    #     r = []
-    #     done = False
-    #     locations.append(np.array(agent.location))
-    #         r.append(agent.get_reward())
-    #     s = np.sum(distance(locations,locations),axis=1)
-    #     r = np.array(r)
-    #     if np.sum(s) == 0:
-    #         done = True
-    #         R = 100 + np.sum(r)
-    #     else:
-    #         R = np.sum(1 / (100*s + 1) + r)
-    #     return R,done
+    def get_reward(self):
+        """A function of the agents locations"""
+        R = 0   #The closer the agents the higher the reward
+        locations = []
+        r = []
+        done = False
+        for agent in self.agents:
+            locations.append(np.array(agent.location))
+            r.append(agent.get_reward())
+        s = np.sum(distance(locations,locations),axis=1)
+        r = np.array(r)
+        if np.sum(s) == 0:
+            done = True
+            R = 100 + np.sum(r)
+        else:
+            R = np.sum(1 / (100*s + 1) + r)
+        return R,done
 
 if __name__ =='__main__':
     grid = Grid(10)
     grid.add_agent(location = (2,3))
     grid.add_agent(location=(2,3))
+    plt.figure(1)
+    plt.xlim([0, 1000])
+    plt.ylim([0, 20])
+    for elem in c:
+        y = x ** 2 * elem
+        plt.cla()
+        plt.plot(x, y)
+        plt.show(block=False)
+        plt.pause(.05)
     print(grid.total_reward())
 
     #Checking the get_reward function in agent

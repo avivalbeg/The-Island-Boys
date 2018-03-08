@@ -1,6 +1,8 @@
 import numpy as np
+from copy import deepcopy
 #from Grid import Grid
 import matplotlib.pyplot as plt
+import Learner
 from scipy.spatial import distance_matrix as distance
 
 class agent:
@@ -8,7 +10,7 @@ class agent:
     represented by a dot they agents are trying to meet in the center
     """
 
-    def __init__(self,grid,location = None,probabilities = None):
+    def __init__(self,grid,location = None,probabilities = None,learner = 'Random'):
         if location ==None:
             self.location = np.random.randint(1,grid.size[0],2)
         elif(type(location)==tuple and len(location)==2):
@@ -24,8 +26,14 @@ class agent:
         #self.meeting_point = None
         self.meeting_point = self.grid.meeting_point  # Just for now before I figure out how to get the robots to agree on a meeting spot.
         self.waiting = False
-        self.viewing = 2
+        self.viewing = 1
         self.view = np.zeros(grid.Map.shape,dtype=bool)
+        if learner =='Random':
+            self.brain = Learner.Random(self)
+        if learner =='Manual':
+            self.brain = Learner.Manual(self)
+        if learner == 'RandomFinder':
+            self.brain = Learner.RandomFinder(self)
 
     def convert_location_to_state(self):
         n = self.grid.size1
@@ -71,70 +79,71 @@ class agent:
         else:
             ymax = y+self.viewing
         self.view[xlow:xmax,ylow:ymax] = True
+        return self.view*Map
 
-
-    def simulate_step(self,action,loc = None, probability = 1):
+    def simulate_step(self,action = None,loc = None, probability = 1):
+        done = False
+        if action == None:
+            action = self.brain.get_action()
         if loc ==None:
-            loc = np.array(self.location)
-        mistake = float(np.random.rand())>probability
-        if not mistake:
-            if action == 0: # Go up
-                loc[0] = loc[0]-1
-            if action == 1:
-                loc[1] = loc[1]+1
-            if action == 2:
-                loc[0] = loc[0]+1
-            if action == 3:
-                loc[1] = loc[1]-1
-            if action == 4:
-                pass
-            if action ==5:
-                self.communicate()
-            if action ==6:
-                self.communicate()
-            if loc[0]<=0:
-                loc[0]=0
-            if loc[1]<=0:
-                loc[1]=0
-            if loc[0]>self.grid.size1-1:
-                loc[0]=self.grid.size1-1
-            if loc[1]>self.grid.size1-1:
-                loc[1]=self.grid.size1-1
+            loc = self.location
+        last_loc = deepcopy(loc)
+        if action == 0: # Go up
+            loc[0] = loc[0]-1
+        if action == 1:
+            loc[1] = loc[1]+1
+        if action == 2:
+            loc[0] = loc[0]+1
+        if action == 3:
+            loc[1] = loc[1]-1
+        if action == 4:
+            pass
+        if action ==5:
+            pass  #self.communicate()
+        if action ==6:
+            pass  #self.communicate()
+        if loc[0]<=0:
+            loc[0]=0
+        if loc[1]<=0:
+            loc[1]=0
+        if loc[0]>self.grid.size1-1:
+            loc[0]=self.grid.size1-1
+        if loc[1]>self.grid.size1-1:
+            loc[1]=self.grid.size1-1
 
-            return loc
-        if mistake:
-            #Change later
-            action = np.random.sample([0,1,2,3,4])
-            loc = self.simulate_step(action)
-            return loc
 
-    def get_reward(self,action=None):
-        r=0
-        k=1
+        #### The reward
+        r = 0  # total reward for step
+        k = 50 # Gain on distance
+        k2 = -.2  # Gain on the gradient
         if self.meeting_point is None:
-            r+= -1
+            r += -1
         else:
-            r+= k/(distance([self.location],[self.meeting_point]).squeeze()+1)
+            r += k / (distance([self.location], [self.meeting_point]).squeeze() + 1)
         if action == None:
             action = self.last_action
-        if action ==6:
-            r-=.03
+        if action == 6:
+            r -= .03
         elif action == 5:
-            r-=.03
+            r -= .03
         elif action == 4:
-            r+=-.01
+            r += -.01
         else:
-            r+=-.03
-        if self.grid.have_met()==True:
-            r+=50
-        return r
+            r += -.03
+        if self.grid.have_met() == True:
+            r += 50
+            done = True
+        r_fromgrad = k2*(self.grid.Map[loc[0],loc[1]])
+        #print('The reward from the gradient is %f'%r_fromgrad)
+        r+= r_fromgrad    #The gradient contribution to the reward
+        return loc,action,r,done
 
-    def take_step(self,action):
-        self.location = self.simulate_step(action)
+
+    def take_step(self,action=None):
+        self.location,action,reward,done = self.simulate_step(action)
         self.last_action = action
+        return self.location,action,reward,done
 
-# if __name__ =='__main__':
-#     grid = Grid()
-#     agent1 = agent(grid)
-#     plt.imshow(agent1.see_map())
-#     plt.show()
+if __name__ =='__main__':
+    from Grid import Grid
+    import time
