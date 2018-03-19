@@ -26,40 +26,180 @@ class Random:
         return np.random.randint(self.nA)
 
 class RandomFinder:
-    def __init__(self,agent):
+    def __init__(self,agent,dynamic = False):
         self.agent = agent
         self.grid = agent.grid
         self.nA = agent.nA
         self.nS = agent.grid.size1**2
         self.Q = {}
+        self.dynamic = dynamic
+        self.done= False
+        if dynamic:
+            self.num_episodes = 500
+            self.num_steps = 2
+            self.dispersion = .3
+            self.finalA = None
 
-    def Search(self,num_episodes = 100,num_steps = 2):
+
+    def Search(self,num_episodes = 2000,num_steps = 2):
         self.Q = {}
-
+        tot_count = 0
         for _ in range(num_episodes):
             Cagent = deepcopy(self.agent)
             r = 0
             A = ''
             for _ in range(num_steps):
                 a = np.random.randint(0,self.nA)
-                _,_,rn,done = Cagent.take_step(a)
+                _,a,rn,done = Cagent.take_step(a)
                 r+=rn
                 A += str(a)
+                if done:
+                    print('found way home')
+                    self.done = done
+                    self.finalA = A
+                    return A
             if A in self.Q:
                 pass
             else:
                 self.Q[A] = r
+        A = max(self.Q.items(), key=operator.itemgetter(1))[0]
+        return A
+
+
+    def dynamic_Search(self):
+        if not self.done:
+            A = self.Search(num_episodes=self.num_episodes,num_steps=self.num_steps)
+            waits = A.count('4')
+        if self.done:
+            if self.finalA is not None:
+                A = self.finalA
+                self.finalA = self.finalA[:-1]
+            else:
+                A = '4'
+            return A
+        else:
+            A = self.Search(num_episodes=self.num_episodes, num_steps=self.num_steps)
+            waits = A.count('4')
+            if waits/self.num_steps>.5:
+                self.num_steps+=1
+                self.num_episodes = 4 ** (self.num_steps + 1)
+                if self.num_episodes>500:
+                    self.num_episodes=500
+            else:
+                if self.num_steps>1:
+                    self.num_steps-=1
+                    self.num_episodes=4**(self.num_steps+1)
+                    if self.num_episodes > 500:
+                        self.num_episodes = 500
+            print('num steps: %d , num_episodes: %d'%(self.num_steps,self.num_episodes))
+            return A
 
     def get_action(self):
-        self.Search()
-        action = int(max(self.Q.items(), key=operator.itemgetter(1))[0][0])
+        if not self.dynamic:
+            A = self.Search()
+        else:
+            A = self.dynamic_Search()
+        action = int(A[0])
         return action
 
-class BFSFinder:
-    def __init__(self):
-        pass
-
 class MCTSFinder:
+    def __init__(self,agent,dynamic = False):
+        self.agent = agent
+        self.grid = agent.grid
+        self.nA = agent.nA
+        self.nS = agent.grid.size1**2
+        self.Q = {}
+        self.N = {}
+        self.gamma = .6
+        self.dynamic = dynamic
+        self.done= False
+        if dynamic:
+            self.num_episodes = 16
+            self.num_steps = 2
+            self.dispersion = .3
+            self.finalA = None
+        else:
+            self.num_steps = 2
+
+
+    def Search(self,num_episodes = 2000,num_steps = 2):
+        self.Q = {}
+        self.N = {}
+        tot_count = 0
+        c=1
+        self.num_episodes = 4 ** (self.num_steps + 1)
+        for _ in range(num_episodes):
+            Cagent = deepcopy(self.agent)
+            r = 0
+            A = ''
+            for i in range(num_steps):
+                a = np.random.randint(0,self.nA)
+                loc,a,rn,done = Cagent.take_step(a)
+                self.update_map()
+                r+=(self.gamma**(i))*rn
+                A += str(a)
+                if A in self.Q:
+                    self.N[A] +=1
+                    self.Q[A] = self.Q[A]+(r-self.Q[A])/(self.N[A])+Cagent.knowledge[loc[0],loc[1]]+self.grid.pheremones[loc[0],loc[1]]
+                else:
+                    self.N[A] = 1
+                    self.Q[A] = r
+
+        A = max(self.Q.items(), key=operator.itemgetter(1))[0]
+        return A
+
+
+    def dynamic_Search(self):
+        # if not self.done:
+        #     A = self.Search(num_episodes=self.num_episodes,num_steps=self.num_steps)
+        #     waits = A.count('4')
+        if self.done:
+            if self.finalA is not None:
+                A = self.finalA
+                self.finalA = self.finalA[:-1]
+            else:
+                A = '4'
+            return A
+        else:
+            A = self.Search(num_episodes=self.num_episodes, num_steps=self.num_steps)
+            waits = A.count('4')
+            if waits/self.num_steps>.5:
+                self.num_steps+=1
+                self.num_episodes = 4 ** (self.num_steps+1)
+                if self.num_episodes>500:
+                    self.num_episodes=500
+            else:
+                if self.num_steps>4:
+                    for elem in A:
+                        self.agent.take_step(int(elem))
+                        self.num_steps =1
+                        self.num_episodes = 4**(self.num_steps+1)
+                elif self.num_steps>1:
+                    self.num_steps-=len(A)-A.count('4')-1
+                    self.num_episodes=4**(self.num_steps+1)
+                    if self.num_episodes > 500:
+                        self.num_episodes = 500
+            print('num steps: %d , num_episodes: %d'%(self.num_steps,self.num_episodes))
+            return A
+
+    def update_map(self):
+        self.agent.knowledge[self.agent.location[0],self.agent.location[1]]+=-1
+
+
+
+    def get_action(self):
+        if not self.dynamic:
+            A = self.Search()
+        else:
+            A = self.dynamic_Search()
+        action = int(A[0])
+        return action
+
+
+
+
+
+class BFSFinder:
     def __init__(self):
         pass
 

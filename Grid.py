@@ -11,7 +11,7 @@ class Grid:
         agents: the set of agents
 
     """
-    def __init__(self,n = 10,Map = None,agents=[]):
+    def __init__(self,n = 10,Map = None,agents=[],meeting_point = None):
         self.size = (n,n)
         self.size1 = n
         if type(Map) == np.ndarray:
@@ -27,15 +27,19 @@ class Grid:
             self.Map = np.zeros(self.size)
         self.agent_map = np.zeros(self.size)
         self.agents = agents
+        self.pheremones = np.zeros(self.size)
         #self.meeting_point = np.array([2,3])
-        self.meeting_point = np.random.randint(1,self.size[0],2)
+        if meeting_point is None:
+            self.meeting_point = np.random.randint(1,self.size[0],2)
+        else:
+            self.meeting_point = meeting_point
 
-    def add_agent(self,location=None,learner='Random'):
+    def add_agent(self,location=None,learner='Random',viewing = 3,ant_mode = False):
         if location == None:
-            self.agents.append(agent(self,learner=learner))
+            self.agents.append(agent(self,learner=learner,viewing = viewing,ant_mode = ant_mode))
         else:
             try:
-                self.agents.append(agent(self,location=location))
+                self.agents.append(agent(self,location=location,learner=learner,viewing = viewing,ant_mode=ant_mode))
             except Exception as e:
                 print('Error, loc 1: %s'%e)
 

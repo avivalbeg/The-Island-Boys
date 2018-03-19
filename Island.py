@@ -2,6 +2,7 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 
 def perlin(x,y,seed=0):
     # permutation table
@@ -74,11 +75,26 @@ def Lloyds(n=200):
     voronoi_plot_2d(Voronoi(points))
     plt.show()
 
+def turnImage(img="UKMap.jpg"):
+    img = Image.open(img)
+    img= img.resize((200,200))
+    return img
+
+def rgb2gray(rgb):
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+
+
+
 if __name__ =='__main__':
     lin = np.linspace(0,5,200,endpoint=False)
     x,y = np.meshgrid(lin,lin) # FIX3: I thought I had to invert x and y here but it was a mistake
-
+    UK =  turnImage()
+    UK = UK.convert('L')
     terrain = perlin(x,y,seed=4)
+    print(terrain.shape)
+    UK  = np.array(UK.getdata()).reshape(200,200)==0
+    #UK = rgb2gray(np.ndarray(UK))
     Lloyds()
-    plt.imshow(terrain)
+    plt.imshow(UK*terrain,cmap='ocean')
     plt.show()
+    turnImage()
